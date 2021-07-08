@@ -3,6 +3,7 @@ package question2;
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.util.*;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,11 +34,19 @@ public class JPanelListe2 extends JPanel implements ActionListener, ItemListener
 
     private List<String> liste;
     private Map<String, Integer> occurrences;
+    
+    private Stack<List<String>> pileSave;
+    
+    private Originator originator;
+    private Caretaker caretaker ;
 
     public JPanelListe2(List<String> liste, Map<String, Integer> occurrences) {
         this.liste = liste;
         this.occurrences = occurrences;
-
+        
+        originator = new Originator();
+        caretaker = new Caretaker();
+        
         cmd.setLayout(new GridLayout(3, 1));
 
         cmd.add(afficheur);
@@ -67,7 +76,12 @@ public class JPanelListe2 extends JPanel implements ActionListener, ItemListener
         add(texte, "Center");
 
         boutonRechercher.addActionListener(this);
-        // à compléter;
+        boutonRetirer.addActionListener(this);
+        boutonOccurrences.addActionListener(this);
+        ordreCroissant.addItemListener(this);
+        ordreDecroissant.addItemListener(this);
+        saisie.addActionListener(this);
+        boutonAnnuler.addActionListener(this); 
 
     }
 
@@ -91,6 +105,13 @@ public class JPanelListe2 extends JPanel implements ActionListener, ItemListener
                     afficheur.setText(" -->  " + occur + " occurrence(s)");
                 else
                     afficheur.setText(" -->  ??? ");
+            } else if(ae.getSource() == boutonAnnuler){
+                try{
+                    if(!caretaker.isEmpty()){
+                        liste = originator.restoreFromMemento(caretaker.getMemento());
+                        occurrences = Chapitre2CoreJava2.occurrencesDesMots(this.liste);
+                    } else{}
+                } catch (Exception e){}
             }
             texte.setText(liste.toString());
 
@@ -100,19 +121,38 @@ public class JPanelListe2 extends JPanel implements ActionListener, ItemListener
     }
 
     public void itemStateChanged(ItemEvent ie) {
-        if (ie.getSource() == ordreCroissant)
-        ;// à compléter
-        else if (ie.getSource() == ordreDecroissant)
-        ;// à compléter
-
+        List<String> list = new ArrayList<String>(this.liste);
+        boolean res = false;
+        if (ie.getSource() == ordreCroissant){
+            res = true;
+            if(res) {save(list);}
+            Collections.sort(this.liste);
+        }else if (ie.getSource() == ordreDecroissant){
+            res = true;
+            if(res) {save(list);}
+            Collections.sort(this.liste, Collections.reverseOrder());
+        }
         texte.setText(liste.toString());
+    }
+    
+    private void save(List<String> listSave){
+        listSave = new ArrayList<>(this.liste);
+        originator.set(listSave);
+        caretaker.addMemento(originator.saveToMemento());
     }
 
     private boolean retirerDeLaListeTousLesElementsCommencantPar(String prefixe) {
         boolean resultat = false;
-        // à compléter
-        // à compléter
-        // à compléter
+        List<String> temp = this.liste;
+        Iterator<String> i = temp.iterator();
+        while(i.hasNext()) {
+            String x = i.next();
+            if (x.startsWith(prefixe)) {
+                i.remove();
+                resultat = true;
+                this.occurrences.put(x, 0);
+            }
+        }
         return resultat;
     }
 
